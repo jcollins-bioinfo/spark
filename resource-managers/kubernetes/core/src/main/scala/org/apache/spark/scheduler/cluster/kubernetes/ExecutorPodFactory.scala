@@ -53,56 +53,54 @@ private[spark] class ExecutorPodFactoryImpl(
 
   private val EXECUTOR_ID_COUNTER = new AtomicLong(0L)
   private val executorExtraClasspath = sparkConf.get(
-    org.apache.spark.internal.config.EXECUTOR_CLASS_PATH)
+      org.apache.spark.internal.config.EXECUTOR_CLASS_PATH)
   private val executorJarsDownloadDir = sparkConf.get(INIT_CONTAINER_JARS_DOWNLOAD_LOCATION)
 
   private val executorLabels = ConfigurationUtils.combinePrefixedKeyValuePairsWithDeprecatedConf(
-    sparkConf,
-    KUBERNETES_EXECUTOR_LABEL_PREFIX,
-    KUBERNETES_EXECUTOR_LABELS,
-    "executor label")
+      sparkConf,
+      KUBERNETES_EXECUTOR_LABEL_PREFIX,
+      KUBERNETES_EXECUTOR_LABELS,
+      "executor label")
   require(
-    !executorLabels.contains(SPARK_APP_ID_LABEL),
-    s"Custom executor labels cannot contain $SPARK_APP_ID_LABEL as it is" +
-      s" reserved for Spark.")
+      !executorLabels.contains(SPARK_APP_ID_LABEL),
+      s"Custom executor labels cannot contain $SPARK_APP_ID_LABEL as it is reserved for Spark.")
   require(
-    !executorLabels.contains(SPARK_EXECUTOR_ID_LABEL),
-    s"Custom executor labels cannot contain $SPARK_EXECUTOR_ID_LABEL as it is reserved for" +
-      s" Spark.")
+      !executorLabels.contains(SPARK_EXECUTOR_ID_LABEL),
+      s"Custom executor labels cannot contain $SPARK_EXECUTOR_ID_LABEL as it is reserved for" +
+        s" Spark.")
 
   private val executorAnnotations =
-    ConfigurationUtils.combinePrefixedKeyValuePairsWithDeprecatedConf(
-      sparkConf,
-      KUBERNETES_EXECUTOR_ANNOTATION_PREFIX,
-      KUBERNETES_EXECUTOR_ANNOTATIONS,
-      "executor annotation")
+      ConfigurationUtils.combinePrefixedKeyValuePairsWithDeprecatedConf(
+          sparkConf,
+          KUBERNETES_EXECUTOR_ANNOTATION_PREFIX,
+          KUBERNETES_EXECUTOR_ANNOTATIONS,
+          "executor annotation")
   private val nodeSelector =
-    ConfigurationUtils.parsePrefixedKeyValuePairs(
-      sparkConf,
-      KUBERNETES_NODE_SELECTOR_PREFIX,
-      "node-selector")
+      ConfigurationUtils.parsePrefixedKeyValuePairs(
+          sparkConf,
+          KUBERNETES_NODE_SELECTOR_PREFIX,
+          "node-selector")
 
   private val executorDockerImage = sparkConf.get(EXECUTOR_DOCKER_IMAGE)
   private val dockerImagePullPolicy = sparkConf.get(DOCKER_IMAGE_PULL_POLICY)
   private val executorPort = sparkConf.getInt("spark.executor.port", DEFAULT_STATIC_PORT)
   private val blockmanagerPort = sparkConf
-    .getInt("spark.blockmanager.port", DEFAULT_BLOCKMANAGER_PORT)
-
+      .getInt("spark.blockmanager.port", DEFAULT_BLOCKMANAGER_PORT)
   private val kubernetesDriverPodName = sparkConf
-    .get(KUBERNETES_DRIVER_POD_NAME)
-    .getOrElse(
-      throw new SparkException("Must specify the driver pod name"))
+      .get(KUBERNETES_DRIVER_POD_NAME)
+      .getOrElse(throw new SparkException("Must specify the driver pod name"))
+
   private val executorPodNamePrefix = sparkConf.get(KUBERNETES_EXECUTOR_POD_NAME_PREFIX)
 
   private val executorMemoryMb = sparkConf.get(org.apache.spark.internal.config.EXECUTOR_MEMORY)
   private val executorMemoryString = sparkConf.get(
-    org.apache.spark.internal.config.EXECUTOR_MEMORY.key,
-    org.apache.spark.internal.config.EXECUTOR_MEMORY.defaultValueString)
+      org.apache.spark.internal.config.EXECUTOR_MEMORY.key,
+      org.apache.spark.internal.config.EXECUTOR_MEMORY.defaultValueString)
 
   private val memoryOverheadMb = sparkConf
-    .get(KUBERNETES_EXECUTOR_MEMORY_OVERHEAD)
-    .getOrElse(math.max((MEMORY_OVERHEAD_FACTOR * executorMemoryMb).toInt,
-      MEMORY_OVERHEAD_MIN))
+      .get(KUBERNETES_EXECUTOR_MEMORY_OVERHEAD)
+      .getOrElse(math.max((MEMORY_OVERHEAD_FACTOR * executorMemoryMb).toInt,
+          MEMORY_OVERHEAD_MIN))
   private val executorMemoryWithOverhead = executorMemoryMb + memoryOverheadMb
 
   private val executorCores = sparkConf.getDouble("spark.executor.cores", 1d)
@@ -123,10 +121,10 @@ private[spark] class ExecutorPodFactoryImpl(
     // executorId and applicationId
     val hostname = name.substring(Math.max(0, name.length - 63))
     val resolvedExecutorLabels = Map(
-      SPARK_EXECUTOR_ID_LABEL -> executorId,
-      SPARK_APP_ID_LABEL -> applicationId,
-      SPARK_ROLE_LABEL -> SPARK_POD_EXECUTOR_ROLE) ++
-      executorLabels
+        SPARK_EXECUTOR_ID_LABEL -> executorId,
+        SPARK_APP_ID_LABEL -> applicationId,
+        SPARK_ROLE_LABEL -> SPARK_POD_EXECUTOR_ROLE) ++
+        executorLabels
     val executorMemoryQuantity = new QuantityBuilder(false)
       .withAmount(s"${executorMemoryMb}M")
       .build()
@@ -187,33 +185,33 @@ private[spark] class ExecutorPodFactoryImpl(
       .withImage(executorDockerImage)
       .withImagePullPolicy(dockerImagePullPolicy)
       .withNewResources()
-      .addToRequests("memory", executorMemoryQuantity)
-      .addToLimits("memory", executorMemoryLimitQuantity)
-      .addToRequests("cpu", executorCpuQuantity)
-      .endResources()
+        .addToRequests("memory", executorMemoryQuantity)
+        .addToLimits("memory", executorMemoryLimitQuantity)
+        .addToRequests("cpu", executorCpuQuantity)
+        .endResources()
       .addAllToEnv(executorEnv.asJava)
       .withPorts(requiredPorts.asJava)
       .build()
 
     val executorPod = new PodBuilder()
       .withNewMetadata()
-      .withName(name)
-      .withLabels(resolvedExecutorLabels.asJava)
-      .withAnnotations(executorAnnotations.asJava)
-      .withOwnerReferences()
-      .addNewOwnerReference()
-      .withController(true)
-      .withApiVersion(driverPod.getApiVersion)
-      .withKind(driverPod.getKind)
-      .withName(driverPod.getMetadata.getName)
-      .withUid(driverPod.getMetadata.getUid)
-      .endOwnerReference()
-      .endMetadata()
+        .withName(name)
+        .withLabels(resolvedExecutorLabels.asJava)
+        .withAnnotations(executorAnnotations.asJava)
+        .withOwnerReferences()
+          .addNewOwnerReference()
+            .withController(true)
+            .withApiVersion(driverPod.getApiVersion)
+            .withKind(driverPod.getKind)
+            .withName(driverPod.getMetadata.getName)
+            .withUid(driverPod.getMetadata.getUid)
+            .endOwnerReference()
+        .endMetadata()
       .withNewSpec()
-      .withHostname(hostname)
-      .withRestartPolicy("Never")
-      .withNodeSelector(nodeSelector.asJava)
-      .endSpec()
+        .withHostname(hostname)
+        .withRestartPolicy("Never")
+        .withNodeSelector(nodeSelector.asJava)
+        .endSpec()
       .build()
 
     val containerWithExecutorLimitCores = executorLimitCores.map {
@@ -223,8 +221,8 @@ private[spark] class ExecutorPodFactoryImpl(
           .build()
         new ContainerBuilder(executorContainer)
           .editResources()
-          .addToLimits("cpu", executorCpuLimitQuantity)
-          .endResources()
+            .addToLimits("cpu", executorCpuLimitQuantity)
+            .endResources()
           .build()
     }.getOrElse(executorContainer)
 
@@ -232,9 +230,9 @@ private[spark] class ExecutorPodFactoryImpl(
       config.shuffleDirs.foldLeft(containerWithExecutorLimitCores) { (container, dir) =>
         new ContainerBuilder(container)
           .addNewVolumeMount()
-          .withName(FilenameUtils.getBaseName(dir))
-          .withMountPath(dir)
-          .endVolumeMount()
+            .withName(FilenameUtils.getBaseName(dir))
+            .withMountPath(dir)
+            .endVolumeMount()
           .build()
       }
     }.getOrElse(containerWithExecutorLimitCores)
@@ -242,36 +240,36 @@ private[spark] class ExecutorPodFactoryImpl(
       config.shuffleDirs.foldLeft(executorPod) { (builder, dir) =>
         new PodBuilder(builder)
           .editSpec()
-          .addNewVolume()
-          .withName(FilenameUtils.getBaseName(dir))
-          .withNewHostPath()
-          .withPath(dir)
-          .endHostPath()
-          .endVolume()
-          .endSpec()
+            .addNewVolume()
+              .withName(FilenameUtils.getBaseName(dir))
+              .withNewHostPath()
+                .withPath(dir)
+                .endHostPath()
+              .endVolume()
+            .endSpec()
           .build()
       }
     }.getOrElse(executorPod)
     val (withMaybeSmallFilesMountedPod, withMaybeSmallFilesMountedContainer) =
       mountSmallFilesBootstrap.map { bootstrap =>
         bootstrap.mountSmallFilesSecret(
-          withMaybeShuffleConfigPod, withMaybeShuffleConfigExecutorContainer)
+            withMaybeShuffleConfigPod, withMaybeShuffleConfigExecutorContainer)
       }.getOrElse(withMaybeShuffleConfigPod, withMaybeShuffleConfigExecutorContainer)
     val (executorPodWithInitContainer, initBootstrappedExecutorContainer) =
       executorInitContainerBootstrap.map { bootstrap =>
         val podWithDetachedInitContainer = bootstrap.bootstrapInitContainerAndVolumes(
-          PodWithDetachedInitContainer(
-            withMaybeSmallFilesMountedPod,
-            new ContainerBuilder().build(),
-            withMaybeSmallFilesMountedContainer))
+            PodWithDetachedInitContainer(
+                withMaybeSmallFilesMountedPod,
+                new ContainerBuilder().build(),
+                withMaybeSmallFilesMountedContainer))
 
         val resolvedInitContainer = executorMountInitContainerSecretPlugin.map { plugin =>
           plugin.mountResourceStagingServerSecretIntoInitContainer(
-            podWithDetachedInitContainer.initContainer)
+              podWithDetachedInitContainer.initContainer)
         }.getOrElse(podWithDetachedInitContainer.initContainer)
 
         val podWithAttachedInitContainer = InitContainerUtil.appendInitContainer(
-          podWithDetachedInitContainer.pod, resolvedInitContainer)
+            podWithDetachedInitContainer.pod, resolvedInitContainer)
 
         val resolvedPodWithMountedSecret = executorMountInitContainerSecretPlugin.map { plugin =>
           plugin.addResourceStagingServerSecretVolumeToPod(podWithAttachedInitContainer)
@@ -285,8 +283,8 @@ private[spark] class ExecutorPodFactoryImpl(
             executorPodWithInitContainer, nodeToLocalTaskCount)
     new PodBuilder(executorPodWithNodeAffinity)
       .editSpec()
-      .addToContainers(initBootstrappedExecutorContainer)
-      .endSpec()
+        .addToContainers(initBootstrappedExecutorContainer)
+        .endSpec()
       .build()
   }
 }

@@ -221,8 +221,6 @@ private[spark] class KubernetesClusterSchedulerBackend(
     }
   }
 
-  private val objectMapper = new ObjectMapper().registerModule(DefaultScalaModule)
-
   private def getShuffleClient(): KubernetesExternalShuffleClient = {
     new KubernetesExternalShuffleClient(
       SparkTransportConf.fromSparkConf(conf, "shuffle"),

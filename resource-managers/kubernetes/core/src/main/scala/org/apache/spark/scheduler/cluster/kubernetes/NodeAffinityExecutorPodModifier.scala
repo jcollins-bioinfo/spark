@@ -72,3 +72,13 @@ private[spark] object NodeAffinityExecutorPodModifierImpl
     }
   }
 }
+
+// These case classes model K8s node affinity syntax fo
+// preferredDuringSchedulingIgnoredDuringExecution.
+// see https://kubernetes.io/docs/concepts/configuration/assign-pod-node
+private case class SchedulerAffinity(nodeAffinity: NodeAffinity)
+private case class NodeAffinity(
+    preferredDuringSchedulingIgnoredDuringExecution: Iterable[WeightedPreference])
+private case class WeightedPreference(weight: Int, preference: Preference)
+private case class Preference(matchExpressions: Array[MatchExpression])
+private case class MatchExpression(key: String, operator: String, values: Iterable[String])

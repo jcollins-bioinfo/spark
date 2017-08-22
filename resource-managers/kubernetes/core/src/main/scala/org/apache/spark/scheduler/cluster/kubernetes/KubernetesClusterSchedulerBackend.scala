@@ -537,10 +537,6 @@ private[spark] class KubernetesClusterSchedulerBackend(
     }
   }
 }
-case class ShuffleServiceConfig(
-    shuffleNamespace: String,
-    shuffleLabels: Map[String, String],
-    shuffleDirs: Seq[String])
 
 private object KubernetesClusterSchedulerBackend {
   private val DEFAULT_STATIC_PORT = 10000
@@ -555,14 +551,3 @@ private object KubernetesClusterSchedulerBackend {
   }
 }
 
-/**
- * These case classes model K8s node affinity syntax for
- * preferredDuringSchedulingIgnoredDuringExecution.
- * @see https://kubernetes.io/docs/concepts/configuration/assign-pod-node
- */
-case class SchedulerAffinity(nodeAffinity: NodeAffinity)
-case class NodeAffinity(preferredDuringSchedulingIgnoredDuringExecution:
-                        Iterable[WeightedPreference])
-case class WeightedPreference(weight: Int, preference: Preference)
-case class Preference(matchExpressions: Array[MatchExpression])
-case class MatchExpression(key: String, operator: String, values: Iterable[String])
